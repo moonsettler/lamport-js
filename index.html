@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://bitcoincore.tech/apps/bitcoinjs-ui/lib/bitcoinjs-lib.js"></script>
+    <script src="https://bundle.run/buffer@6.0.3"></script>
+    <script src="https://bundle.run/varuint-bitcoin@1.1.2"></script>
+	<style>
+		*{
+			background-color: rgb(22,27,34);
+			color: rgb(47, 161, 106);
+			font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+			font-weight: bold;
+		}
+		input:read-only {
+			color: rgb(23, 111, 69);
+		}
+		.button {
+			color: rgb(47, 161, 106) !important;
+			width: 130px;
+		}
+		body, p, div {
+		  	background-color: rgb(33, 42, 54);
+		  	color: rgb(47, 157, 161);
+		}
+		input, textarea {
+			margin: 0 !important;
+			margin-bottom: 10px !important;
+			padding: 0 !important;
+			padding: 4px 8px !important;
+			font-size: 16px;
+			border-width: 2px !important;
+			border-radius: 4px;
+			border-color: rgb(40, 131, 134);
+			outline: none;
+			width: 960px;
+			resize: vertical;
+		}
+	</style>
+</head>
+<body>
+	<div style="width:984px; margin:20px auto;">
+		<p>private key (hex):</p>
+		<p>
+			<input id="input_priv" maxlength="64" style="width: 820px" />
+			<input id="button_new" class="button" value="Generate" type="button" onclick="ui_new_priv()" />
+		</p>
+
+		<p>bip32 xpriv:</p>
+		<p><input id="input_xpriv" readonly="readonly" /></p>
+
+		<p>public key (root hash):</p>
+		<p>
+			<input id="input_pub" readonly="readonly" style="width: 820px" />
+			<input id="button_calc" class="button" value="Generate" type="button" onclick="ui_generate()" />
+		</p>
+
+		<p>lock script:</p>
+		<p><textarea id="output_script" cols="120" rows="24" spellcheck="false"></textarea></p>
+	</div>
+
+	<script>
+		const nameof = exp => Object.keys(exp).pop();
+
+		function assert(condition, message) {
+			if (!condition) {
+				throw new Error(message || " Assertion failed");
+			}
+		}
+
+		function assert_type(obj, vname, tname) {
+			if(typeof obj == "object")
+			{
+				assert(Object.prototype.toString.call(obj) == `[object ${tname}]`, `${vname}: ${tname}}`);
+			}
+			else
+			{
+				assert(typeof obj == tname, `${vname}: ${tname}}`);
+			}
+		}
+
+		function snippet_merkle_verify()
+		{
+			return `// *** merkle verify step
+OP_SWAP
+OP_IF
+OP_SWAP
+OP_ENDIF
+OP_CAT
+OP_HASH160`
+		}
+
+		function snippet_update_alt_stack()
+		{
+			return `// *** update state on alt-stack
+OP_FROMALTSTACK
+OP_SWAP
+OP_FROMALTSTACK
+OP_CAT
+OP_TOALTSTACK
+OP_CAT
+OP_HASH160
+OP_TOALTSTACK`
+		}
+
+		function lamport_script(pubkey)
+		{
+			return `// witness script
+OP_DUP
+OP_TOALTSTACK  // <byte-value>
+OP_CAT
+
+OP_HASH160
+
+${snippet_merkle_verify()}
+
+${snippet_merkle_verify()}
+
+${snippet_merkle_verify()}
+
+OP_FROMALTSTACK // <byte-value>
+
+// stack: ... <merkle-root> <byte-value> | alt-stack: <sig-hash-build> <pubkey-build>
+${snippet_update_alt_stack()}
+
+OP_FROMALTSTACK // <pubkey>
+
+<0x${pubkey.toString('hex')}>
+OP_EQUALVERIFY
+
+OP_FROMALTSTACK // <sighash>`
+		}
+
+		function op_sha160(i1)
+		{
+			assert_type(i1, nameof(i1), "Uint8Array");
+
+			return bitcoinjs.crypto.hash160(i1);
+		}
+
+		function op_cat(i1, i2)
+		{
+			assert_type(i2, nameof(i1), "Uint8Array");
+			assert_type(i2, nameof(i2), "Uint8Array");
+
+			var o = new Uint8Array(i1.length + i2.length);
+			o.set(i1);
+			o.set(i2, i1.length);
+			return o;
+		}
+
+		function ui_init()
+		{
+			document.getElementById("input_xpriv").value = "";
+			document.getElementById("input_pub").value = "";
+			document.getElementById("output_script").value = "";
+		}
+
+		function ui_clear()
+		{
+			document.getElementById("input_priv").value = "";
+			
+			ui_init();
+		}
+
+		function ui_new_priv()
+		{
+			ui_clear();
+
+			const key = bitcoinjs.ECPair.makeRandom();
+
+			document.getElementById("input_priv").value = key.privateKey.toString('hex');
+		}
+
+		function ui_generate()
+		{
+			ui_init();
+
+			const secret = document.getElementById("input_priv").value;
+			
+			assert(secret.length == 64, "Private key needs to be 256 bit hexadecimal!");
+
+			const seed = buffer.Buffer.from( secret, "hex" );
+			const root = bitcoinjs.bip32.fromSeed(seed);
+
+			document.getElementById("input_xpriv").value = root.toBase58();
+
+			const node = root.deriveHardened(69420);
+
+			const child = node.deriveHardened(0).deriveHardened(0);
+
+			const pk = child.privateKey;
+
+			console.log(pk.toString('hex'));
+
+			const h = op_sha160(pk);
+
+			console.log(h.toString('hex'));
+
+			document.getElementById("input_pub").value = h.toString('hex');
+			document.getElementById("output_script").value  = lamport_script(h);
+		}
+
+		ui_clear();
+	</script>
+</body>
+</html>

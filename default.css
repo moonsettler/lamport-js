@@ -1,0 +1,30 @@
+*{
+    background-color: rgb(22,27,34);
+    color: rgb(47, 161, 106);
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    font-weight: bold;
+}
+input:read-only {
+    color: rgb(23, 111, 69);
+}
+.button {
+    color: rgb(47, 161, 106) !important;
+    width: 130px;
+}
+body, p, div {
+      background-color: rgb(33, 42, 54);
+      color: rgb(47, 157, 161);
+}
+input, textarea {
+    margin: 0 !important;
+    margin-bottom: 10px !important;
+    padding: 0 !important;
+    padding: 4px 8px !important;
+    font-size: 16px;
+    border-width: 2px !important;
+    border-radius: 4px;
+    border-color: rgb(40, 131, 134);
+    outline: none;
+    width: 960px;
+    resize: vertical;
+}

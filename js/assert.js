@@ -6,7 +6,7 @@ function assert(condition, message) {
     }
 }
 
-function assert_type(obj, vname, tname) {
+function assert_type__(obj, vname, tname) {
     if(typeof obj == "object")
     {
         assert(Object.prototype.toString.call(obj) == `[object ${tname}]`, `${vname}: ${tname}}`);
@@ -16,3 +16,5 @@ function assert_type(obj, vname, tname) {
         assert(typeof obj == tname, `${vname}: ${tname}}`);
     }
 }
+
+const assert_type = (exp, tname) => assert_type__(exp, nameof(exp), tname);

@@ -9,15 +9,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function op_sha160(i1)
 {
-    assert_type(i1, nameof(i1), "Uint8Array");
+    assert_type(i1, "Uint8Array");
 
     return bitcoinjs.crypto.hash160(i1);
 }
 
 function op_cat(i1, i2)
 {
-    assert_type(i2, nameof(i1), "Uint8Array");
-    assert_type(i2, nameof(i2), "Uint8Array");
+    assert_type(i1, "Uint8Array");
+    assert_type(i2, "Uint8Array");
 
     var o = new Uint8Array(i1.length + i2.length);
     o.set(i1);

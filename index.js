@@ -1,3 +1,12 @@
+document.addEventListener("DOMContentLoaded", function(event) {
+    $input_priv = document.getElementById("input_priv");
+    $input_xpriv = document.getElementById("input_xpriv");
+    $input_pub = document.getElementById("input_pub");
+    $output_script = document.getElementById("output_script");
+
+    ui_clear();
+});
+
 function op_sha160(i1)
 {
     assert_type(i1, nameof(i1), "Uint8Array");
@@ -18,14 +27,14 @@ function op_cat(i1, i2)
 
 function ui_init()
 {
-    document.getElementById("input_xpriv").value = "";
-    document.getElementById("input_pub").value = "";
-    document.getElementById("output_script").value = "";
+    $input_xpriv.value = "";
+    $input_pub.value = "";
+    $output_script.value = "";
 }
 
 function ui_clear()
 {
-    document.getElementById("input_priv").value = "";
+    $input_priv.value = "";
     
     ui_init();
 }
@@ -36,7 +45,7 @@ function ui_new_priv()
 
     const key = bitcoinjs.ECPair.makeRandom();
 
-    document.getElementById("input_priv").value = key.privateKey.toString('hex');
+    $input_priv.value = key.privateKey.toString('hex');
 }
 
 function ui_generate()
@@ -50,7 +59,7 @@ function ui_generate()
     const seed = buffer.Buffer.from( secret, "hex" );
     const root = bitcoinjs.bip32.fromSeed(seed);
 
-    document.getElementById("input_xpriv").value = root.toBase58();
+    $input_xpriv.value = root.toBase58();
 
     const node = root.deriveHardened(69420);
 
@@ -64,6 +73,6 @@ function ui_generate()
 
     console.log(h.toString('hex'));
 
-    document.getElementById("input_pub").value = h.toString('hex');
-    document.getElementById("output_script").value  = lamport_script(h);
+    $input_pub.value = h.toString('hex');
+    $output_script.value  = lamport_script(h);
 }

@@ -55,24 +55,17 @@ function ui_generate()
     const secret = document.getElementById("input_priv").value;
     
     assert(secret.length == 64, "Private key needs to be 256 bit hexadecimal!");
+    
+    const seed = buffer.Buffer.from(secret, "hex");
 
-    const seed = buffer.Buffer.from( secret, "hex" );
-    const root = bitcoinjs.bip32.fromSeed(seed);
+    const lamport = new Lamport(seed, 20);
 
-    $input_xpriv.value = root.toBase58();
+    $input_xpriv.value = lamport.xpriv;
 
-    const node = root.deriveHardened(69420);
+    const pubKey = lamport.publicKey;
 
-    const child = node.deriveHardened(0).deriveHardened(0);
+    console.log(pubKey.toString('hex'));
 
-    const pk = child.privateKey;
-
-    console.log(pk.toString('hex'));
-
-    const h = op_sha160(pk);
-
-    console.log(h.toString('hex'));
-
-    $input_pub.value = h.toString('hex');
-    $output_script.value  = lamport_script(h);
+    $input_pub.value = pubKey.toString('hex');
+    $output_script.value  = lamport_script(pubKey);
 }

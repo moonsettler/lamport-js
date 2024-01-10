@@ -1,3 +1,18 @@
+class LamportMerkleNode {
+    constructor(left, right, value) {
+        this.parent = undefined;
+        this.left = left;
+        this.right = right;
+        this.value = value;
+    }
+    static newNode(left, right) {
+        return new LamportMerkleNode(left, right, op_hash160(op_cat(left.value, right.value)));
+    }
+    static newLeaf(value) {
+        return new LamportMerkleNode(undefined, undefined, value);
+    }
+}
+
 class LamportMerkleTree {
     constructor(node, nLeaves) {
         this.nLeaves = nLeaves;
@@ -8,21 +23,45 @@ class LamportMerkleTree {
         {
             const child = node.deriveHardened(i);
 
-            const pk = child.privateKey;
+            const priv = child.privateKey;
 
-            const pi = op_sha160(pk);
+            const preImage = op_hash160(priv);
 
-            this.preImages.push(pi);
+            this.preImages.push(preImage);
 
-            const iba = new Uint8Array(1);
-            iba[0] = i;
+            const iAsByteArray = new Uint8Array(1);
+            iAsByteArray[0] = i;
 
-            const h = op_sha160(op_cat(pi, iba));
+            const leafHash = op_hash160(op_cat(preImage, iAsByteArray));
 
-            this.leaves.push(h);
-
-            console.log(`hash160(${pi.toString('hex')}+${i.toString(16)}): ${h.toString('hex')}`);
+            const leafNode = LamportMerkleNode.newLeaf(leafHash);
+            
+            this.leaves.push(leafNode);
         }
+
+        this.root = LamportMerkleTree.merklize(this.leaves)[0];
+    }
+
+    static merklize(arrayNodes)
+    {
+        if(arrayNodes.length == 1)
+        {
+            return arrayNodes;
+        }
+
+        const currentState = new Array();
+        const n = arrayNodes.length;
+
+        for(var i = 0; i < n; i += 2)
+        {
+            const node = LamportMerkleNode.newNode(arrayNodes[i], arrayNodes[i+1]);
+            arrayNodes[i].parent = node;
+            arrayNodes[i+1].parent = node;
+
+            currentState.push(node);
+        }
+
+        return(LamportMerkleTree.merklize(currentState));
     }
 }
 
@@ -33,16 +72,14 @@ class Lamport {
         this.mTrees = new Array();
         this.privateKey = privateKey;
 
-        const root = bitcoinjs.bip32.fromSeed(privateKey);
+        const seed = bitcoinjs.bip32.fromSeed(privateKey);
 
-        this.xpriv = root.toBase58();
+        this.xpriv = seed.toBase58();
 
-        const node = root.deriveHardened(69420);
+        const node = seed.deriveHardened(69420);
 
         for(var i = 0; i < sigHashLen; i++)
         {
-            console.log(`${i}:`);
-
             const child = node.deriveHardened(i);
 
             const merkleTree = new LamportMerkleTree(child, 256);
@@ -50,12 +87,13 @@ class Lamport {
             this.mTrees.push(merkleTree);
         }
 
-        const pk = root.privateKey;
+        var root = this.mTrees[0].root.value;
 
-        console.log(pk.toString('hex'));
+        for(var i = 1; i < sigHashLen; i++)
+        {
+            root = op_hash160(op_cat(root, this.mTrees[i].root.value));
+        }
 
-        const h = op_sha160(pk);
-
-        this.publicKey = h;
+        this.publicKey = root;
     }
 }

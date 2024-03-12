@@ -30,7 +30,8 @@ OP_HASH160
 function snippet_merkle_verify(j, i)
 {
     return `// ${i} of ${j} merkle verify step
-OP_NOTIF
+OP_SWAP
+OP_IF
 OP_SWAP
 OP_ENDIF
 OP_CAT

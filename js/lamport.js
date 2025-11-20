@@ -37,7 +37,7 @@ class LamportMerkleTree {
             iAsByteArray[0] = i;
 
             // use the 16-byte preimage consistently for leaf hash
-            const leafHash = op_hash160(op_cat(preImage, iAsByteArray));
+            const leafHash = op_hash160(op_cat(iAsByteArray, preImage));
 
             const leafNode = LamportMerkleNode.newLeaf(leafHash);
             
@@ -96,40 +96,21 @@ class Lamport {
 
         for(var i = 1; i < sigHashLen; i++)
         {
-            root = op_cat(root, this.mTrees[i].root.value);
+            root = op_cat(this.mTrees[i].root.value, root);
         }
 
         this.publicKey = op_hash256(root);
     }
 
-    sign(message) {
-        // message: hex string, Buffer, or Uint8Array
-        /*
-        const msgBytes = (function(m) {
-            if (!m) return new Uint8Array(0);
-            if (typeof m === 'string') {
-                // hex string
-                const len = m.length / 2;
-                const out = new Uint8Array(len);
-                for (let i = 0; i < len; i++) out[i] = parseInt(m.substr(i*2, 2), 16);
-                return out;
-            }
-            if (typeof Buffer !== 'undefined' && Buffer.isBuffer(m)) return new Uint8Array(m);
-            if (m instanceof Uint8Array) return m;
-            if (m.buffer && m.byteLength !== undefined) return new Uint8Array(m.buffer, m.byteOffset, m.byteLength);
-            return new Uint8Array(Array.from(m));
-        })(message);
-
-        if (msgBytes.length !== this.sigHashLen) {
-            throw new Error('Lamport.sign: message length mismatch, expected ' + this.sigHashLen + ' bytes');
-        }
-         */
-
-        const msgBytes = buffer.Buffer.from(message); // assume Uint8Array or Buffer
+    sign_160bit(envelope) {
+        const envBytes = buffer.Buffer.from(envelope); // assume Uint8Array or Buffer
         const parts = [];
+
+        //console.log(envBytes.toString('hex'));
+
         for (let t = 0; t < this.sigHashLen; t++) {
             const tree = this.mTrees[t];
-            const leafIndex = msgBytes[t]; // 0..255
+            const leafIndex = envBytes[t]; // 0..255
 
             // collect sibling hashes from leaf up to root
             let node = tree.leaves[leafIndex];
@@ -140,6 +121,8 @@ class Lamport {
                 siblings.push(this.toUint8(siblingNode.value));
                 node = parent;
             }
+
+            siblings.reverse(); // from root to leaf
 
             // verify tree depth (log2(nLeaves))
             const expectedDepth = Math.log2(tree.nLeaves);

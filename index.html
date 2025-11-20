@@ -28,8 +28,16 @@
 			<input id="button_calc" class="button" value="Generate" type="button" onclick="ui_generate()" />
 		</p>
 
-		<p>lock script:</p>
-		<p><textarea id="output_script" cols="120" rows="24" spellcheck="false"></textarea></p>
+		<p>message to sign (hex):</p>
+		<p>
+			<input id="input_msg" style="width: 820px" />
+			<input id="button_sign" class="button" value="Sign Message" type="button" onclick="ui_sign_message()" />
+		</p>
+		<p>signature (hex):</p>
+		<p>
+			<input id="output_sig" readonly="readonly" style="width: 720px" />
+			<input id="button_copy_sig" class="button" value="Copy" type="button" onclick="ui_copy_sig()" />
+		</p>
 	</div>
 </body>
 </html>

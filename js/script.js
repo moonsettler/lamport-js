@@ -5,6 +5,13 @@ function op_hash160(i1)
     return bitcoinjs.crypto.hash160(i1);
 }
 
+function op_hash256(i1)
+{
+    //assert_type(i1, "Uint8Array");
+
+    return bitcoinjs.crypto.hash256(i1);
+}
+
 function op_cat(i1, i2)
 {
     //assert_type(i1, "Uint8Array");
@@ -16,6 +23,8 @@ function op_cat(i1, i2)
     return o;
 }
 
+
+/*
 function snippet_byte_start(j)
 {
     return `// *** ${j} byte of <sighash>
@@ -94,3 +103,4 @@ OP_FROMALTSTACK // <sighash>`;
 
     return script;
 }
+*/

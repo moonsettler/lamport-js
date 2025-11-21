@@ -73,9 +73,8 @@ function ui_sign_message() {
     const lam = new Lamport(privBytes, 20);
     const sigBytes = lam.sign_160bit(envelopeBytes); // returns Uint8Array
 
-    lam.debug_print_lamport_signature_tree(19, envelopeBytes);
-
-    lam.debug_check_merkle_compression(19, envelopeBytes);
+    //lam.debug_print_lamport_signature_tree(19, envelopeBytes);
+    //lam.debug_check_merkle_compression(19, envelopeBytes);
     
     $output_sig.value = buffer.Buffer.from(sigBytes).toString('hex');
 }

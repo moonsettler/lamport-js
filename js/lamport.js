@@ -99,7 +99,7 @@ class Lamport {
             root = op_cat(root, this.mTrees[i].root.value);
         }
 
-        console.log("Lamport public key root: " + buffer.Buffer.from(root).toString('hex'));
+        //console.log("Lamport public key root: " + buffer.Buffer.from(root).toString('hex'));
 
         this.publicKey = op_hash256(root);
     }
@@ -151,6 +151,7 @@ class Lamport {
         return sig; // Uint8Array
     }
 
+    /*  Debug functions, kept for development purposes (uncomment to use)
     // Print signature for a single tree in ASM format, with root hash as a comment
     debug_print_lamport_signature_tree(treeIndex, envelope) {
         const envBytes = buffer.Buffer.from(envelope);
@@ -233,6 +234,7 @@ class Lamport {
             }
         }
     }
+    */
 
     // helper functions (kept in file-scope so sign can use them)
     toUint8(x) {

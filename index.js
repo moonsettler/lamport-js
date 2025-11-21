@@ -64,7 +64,7 @@ function ui_sign_message() {
     assert(/^[0-9a-fA-F]+$/.test(msgHex),  "Message must be hexadecimal!");
 
     const privBytes = buffer.Buffer.from(privHex, 'hex');
-    const msgBytes = buffer.Buffer.from(msgHex, 'hex'); // 20 bytes hash160 of some message
+    const msgBytes = buffer.Buffer.from(msgHex, 'hex'); // some message
 
     const envelopeBytes = op_hash160(msgBytes); // hash160 of the message
 
@@ -72,6 +72,10 @@ function ui_sign_message() {
 
     const lam = new Lamport(privBytes, 20);
     const sigBytes = lam.sign_160bit(envelopeBytes); // returns Uint8Array
+
+    lam.debug_print_lamport_signature_tree(19, envelopeBytes);
+
+    lam.debug_check_merkle_compression(19, envelopeBytes);
     
     $output_sig.value = buffer.Buffer.from(sigBytes).toString('hex');
 }
